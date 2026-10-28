@@ -66,10 +66,10 @@ async function student(){
   X=data;
   view(`<div class="st"><div class="hero"><h1>🕌 ${esc(X.title)}</h1><p>${X.questions.length} سؤال • ${X.duration} دقيقة</p></div>
   <div class="cd"><b>تعليمات</b><ul><li>جميع الأسئلة في صفحة واحدة ويمكنك التنقل بينها.</li><li>استخدم 🚩 لتعليم سؤال للعودة إليه.</li><li>النتيجة والإجابات الصحيحة تظهر بعد التسليم فقط.</li><li>عند انتهاء الوقت يُسلَّم الامتحان تلقائيًا.</li></ul>
-  <label>اسمك الثلاثي</label><input id="nm" placeholder="اكتب اسمك"><button class="btn" style="width:100%" onclick="begin()">ابدأ الامتحان</button></div></div>`);
+  <button class="btn" style="width:100%" onclick="begin()">ابدأ الامتحان</button></div></div>`);
 }
 function begin(){
-  NAME=$('nm').value.trim();if(NAME.length<3)return alert('اكتب اسمك أولًا');
+  NAME='طالب';
   Q=sh(X.questions).map(q=>({id:q.id,q:q.text,o:sh(q.options.map((t,i)=>({t,i})))}));A=[];F=[];done=0;T=X.duration*60;
   view(`<div class="bar"><span class="tm" id="tm">${fm(T)}</span><span class="sm" id="cn"></span><span><button class="btn g s fab" onclick="$('nv').classList.toggle('op')">📋 الأسئلة</button> <button class="btn s" onclick="ask()">تسليم</button></span></div>
   <div class="lay"><div>${Q.map((x,i)=>`<div class="q" id="q${i}"><div class="qh"><span class="qn">${i+1}</span><button class="fg" id="f${i}" onclick="flag(${i})">🚩 تعليم</button></div><div class="qt">${esc(x.q)}</div>${x.o.map((o,k)=>`<div class="ch" onclick="pick(${i},${o.i})"><b>${L[k]||k+1}</b><span>${esc(o.t)}</span></div>`).join('')}</div>`).join('')}</div>
