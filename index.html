@@ -140,10 +140,6 @@ async function res(id){const {data}=await sb.from('quiz_submissions').select('*'
   window._csv='الاسم,الدرجة,من,التاريخ\n'+data.map(d=>`"${d.student_name.replace(/"/g,'""')}",${d.score},${d.total},${new Date(d.created_at).toLocaleString('ar-EG')}`).join('\n');
   modal(`<b>${data.length} طالب • المتوسط ${avg}%</b><table><tr><th>الاسم</th><th>الدرجة</th></tr>${data.map(d=>`<tr><td>${esc(d.student_name)}</td><td>${d.score}/${d.total}</td></tr>`).join('')}</table><div style="display:flex;gap:8px;margin-top:12px"><button class="btn" style="flex:1" onclick="dl()">تحميل CSV</button><button class="btn g" style="flex:1" onclick="close()">إغلاق</button></div>`)}
 function dl(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+window._csv],{type:'text/csv'}));a.download='results.csv';a.click()}
-/* تشغيل الصفحة بعد تعريف كل المتغيرات */
-location.hash==='#admin'?admin():student();
-</script></body></html>
-تعذّر التسليم (تحقق من الاتصال) ولم تضِع إجاباتك.</p><button class="btn" style="width:100%" onclick="fin()">إعادة المحاولة</button>`)}
   let r=0,w=0,s=0;
   Q.forEach((x,i)=>{const ci=data.correct[x.id],n=$('n'+i);n.className='nb';
     if(A[i]===undefined)s++;else if(A[i]===ci){r++;n.classList.add('c')}else{w++;n.classList.add('w')}
