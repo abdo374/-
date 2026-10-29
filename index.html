@@ -140,62 +140,6 @@ async function res(id){const {data}=await sb.from('quiz_submissions').select('*'
   window._csv='الاسم,الدرجة,من,التاريخ\n'+data.map(d=>`"${d.student_name.replace(/"/g,'""')}",${d.score},${d.total},${new Date(d.created_at).toLocaleString('ar-EG')}`).join('\n');
   modal(`<b>${data.length} طالب • المتوسط ${avg}%</b><table><tr><th>الاسم</th><th>الدرجة</th></tr>${data.map(d=>`<tr><td>${esc(d.student_name)}</td><td>${d.score}/${d.total}</td></tr>`).join('')}</table><div style="display:flex;gap:8px;margin-top:12px"><button class="btn" style="flex:1" onclick="dl()">تحميل CSV</button><button class="btn g" style="flex:1" onclick="close()">إغلاق</button></div>`)}
 function dl(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+window._csv],{type:'text/csv'}));a.download='results.csv';a.click()}
-  let r=0,w=0,s=0;
-  Q.forEach((x,i)=>{const ci=data.correct[x.id],n=$('n'+i);n.className='nb';
-    if(A[i]===undefined)s++;else if(A[i]===ci){r++;n.classList.add('c')}else{w++;n.classList.add('w')}
-    [...$('q'+i).querySelectorAll('.ch')].forEach((e,k)=>{e.classList.remove('s');e.style.cursor='default';e.onclick=null;const oi=x.o[k].i;if(oi===ci)e.classList.add('c');else if(oi===A[i])e.classList.add('w')});
-    if(A[i]!==ci)$('q'+i).insertAdjacentHTML('beforeend',`<div class="ans">✔ الإجابة الصحيحة: ${esc(x.o.find(o=>o.i===ci).t)}</div>`)});
-  const p=Math.round(r/Q.length*100);$('tm').textContent='تم التسليم';
-  modal(`<div class="sc">${r} / ${Q.length}</div><p style="text-align:center;font-weight:700;margin:0">${p}% — ${p>=90?'🏆 ممتاز':p>=75?'👏 جيد جدًا':p>=60?'📖 جيد':p>=50?'مقبول':'🔁 يحتاج مراجعة'}</p><div class="sg"><div><b style="color:var(--ok)">${r}</b>صحيحة</div><div><b style="color:var(--no)">${w}</b>خاطئة</div><div><b>${s}</b>بدون إجابة</div></div><button class="btn" style="width:100%" onclick="close();scrollTo(0,0)">مراجعة الإجابات</button>`)}
-
-/* ================= لوحة المعلّم (index.html#admin) ================= */
-async function admin(){
-  const {data:{session}}=await sb.auth.getSession();
-  if(!session)return view(`<div class="st"><div class="hero"><h1>لوحة المعلّم</h1></div><div class="cd"><label>كلمة المرور</label><input id="pw" type="password" onkeydown="if(event.key==='Enter')login()"><button class="btn" style="width:100%" onclick="login()">دخول</button></div></div>`);
-  const {data:ex,error}=await sb.from('quiz_exams').select('*').order('created_at',{ascending:false});
-  if(error)return msg('خطأ: '+esc(error.message));
-  const base=location.origin+location.pathname;
-  view(`<div class="st"><div class="hero"><h1>لوحة المعلّم</h1><p><button class="btn g s" onclick="sb.auth.signOut().then(admin)">خروج</button></p></div>
-  <div class="cd"><b>➕ امتحان جديد</b><br><label>العنوان</label><input id="ti"><label>اسم الرابط (اختياري – حروف إنجليزية وأرقام، مثل hadith1)</label><input id="sl" dir="ltr" placeholder="يُولَّد تلقائيًا لو تركته فارغًا"><label>المدة بالدقائق</label><input id="du" type="number" value="45">
-  <label>يفتح في (اختياري)</label><input id="op" type="datetime-local"><label>يغلق في (اختياري)</label><input id="cl" type="datetime-local">
-  <label>الأسئلة (س: السؤال / * الصحيحة / - الخاطئة)</label><textarea id="tx" placeholder="س: السؤال؟&#10;* الإجابة الصحيحة&#10;- خاطئة&#10;- خاطئة&#10;- خاطئة"></textarea>
-  <button class="btn" style="width:100%" onclick="create()">حفظ وإنشاء الرابط</button></div>
-  <div class="cd"><b>📚 امتحاناتي</b>${ex.length?ex.map(e=>`<div class="row"><div><b>${esc(e.title)}</b><div class="sm">${e.published?'🟢 منشور':'⚪ مخفي'} • ${new Date(e.created_at).toLocaleDateString('ar-EG')}</div></div><div>
-  <button class="btn g s" onclick="navigator.clipboard.writeText('${base}?e=${e.slug}').then(()=>alert('تم نسخ الرابط'))">🔗 الرابط</button>
-  <button class="btn g s" onclick="res('${e.id}')">النتائج</button>
-  <button class="btn g s" onclick="tog('${e.id}',${!e.published})">${e.published?'إخفاء':'نشر'}</button>
-  <button class="btn r s" onclick="del('${e.id}')">حذف</button></div></div>`).join(''):'<p class="sm">لا توجد امتحانات بعد.</p>'}</div></div>`)}
-async function login(){
-  if(ADMIN_EMAIL.startsWith('PASTE'))return alert('لم تضع إيميل الأدمن في أول السكريبت (ADMIN_EMAIL)');
-  const {error}=await sb.auth.signInWithPassword({email:ADMIN_EMAIL.trim(),password:$('pw').value.trim()});
-  if(!error)return admin();
-  const m=error.message||'';
-  alert(/not confirmed/i.test(m)?'الإيميل غير مفعّل: في Supabase افتح المستخدم واضغط Confirm، أو أعد إنشاءه مع Auto Confirm':/invalid login/i.test(m)?'الإيميل أو كلمة المرور غير مطابقين للمستخدم في Supabase.\nتأكد أن ADMIN_EMAIL في الملف هو نفس إيميل المستخدم بالظبط.':'خطأ: '+m)}
-function parse(t){const qs=[];let c=null;for(let l of t.split('\n')){l=l.trim();if(!l)continue;
-  if(/^س\s*[:：]/.test(l)){c={text:l.replace(/^س\s*[:：]/,'').trim(),o:[],c:-1};qs.push(c)}
-  else if(c&&l[0]==='*'){c.c=c.o.length;c.o.push(l.slice(1).trim())}
-  else if(c&&l[0]==='-')c.o.push(l.slice(1).trim());
-  else if(c&&!c.o.length)c.text+=' '+l}return qs}
-async function create(){
-  const qs=parse($('tx').value),t=$('ti').value.trim();
-  if(!t)return alert('اكتب عنوان الامتحان');if(!qs.length)return alert('لم أجد أسئلة');
-  const bad=qs.findIndex(q=>q.c<0||q.o.length<2);if(bad>=0)return alert('السؤال رقم '+(bad+1)+' ينقصه إجابة صحيحة (*) أو خيارات');
-  const slug=$('sl').value.trim().toLowerCase().replace(/[^a-z0-9-]/g,'')||Math.random().toString(36).slice(2,8);
-  const v=id=>$(id).value?new Date($(id).value).toISOString():null;
-  const {data:e,error}=await sb.from('quiz_exams').insert({slug,title:t,duration_min:+$('du').value||45,opens_at:v('op'),closes_at:v('cl')}).select().single();
-  if(error)return alert(error.code==='23505'?'اسم الرابط مستخدم من قبل، اختر اسمًا آخر':error.message);
-  const {error:e2}=await sb.from('quiz_questions').insert(qs.map((q,i)=>({exam_id:e.id,position:i,text:q.text,options:q.o,correct:q.c})));
-  if(e2){await sb.from('quiz_exams').delete().eq('id',e.id);return alert(e2.message)}
-  const link=location.origin+location.pathname+'?e='+slug;
-  await admin();modal(`<h3 style="margin:0 0 8px">✅ تم إنشاء الامتحان (${qs.length} سؤال)</h3><input readonly value="${link}" onclick="this.select()"><button class="btn" style="width:100%" onclick="navigator.clipboard.writeText('${link}');close()">نسخ الرابط</button>`)}
-async function tog(id,p){await sb.from('quiz_exams').update({published:p}).eq('id',id);admin()}
-async function del(id){if(confirm('حذف الامتحان ونتائجه نهائيًا؟')){await sb.from('quiz_exams').delete().eq('id',id);admin()}}
-async function res(id){const {data}=await sb.from('quiz_submissions').select('*').eq('exam_id',id).order('score',{ascending:false});
-  if(!data.length)return modal('<p>لا توجد نتائج بعد.</p><button class="btn g" onclick="close()">إغلاق</button>');
-  const avg=(data.reduce((a,d)=>a+d.score/d.total,0)/data.length*100).toFixed(0);
-  window._csv='الاسم,الدرجة,من,التاريخ\n'+data.map(d=>`"${d.student_name.replace(/"/g,'""')}",${d.score},${d.total},${new Date(d.created_at).toLocaleString('ar-EG')}`).join('\n');
-  modal(`<b>${data.length} طالب • المتوسط ${avg}%</b><table><tr><th>الاسم</th><th>الدرجة</th></tr>${data.map(d=>`<tr><td>${esc(d.student_name)}</td><td>${d.score}/${d.total}</td></tr>`).join('')}</table><div style="display:flex;gap:8px;margin-top:12px"><button class="btn" style="flex:1" onclick="dl()">تحميل CSV</button><button class="btn g" style="flex:1" onclick="close()">إغلاق</button></div>`)}
-function dl(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+window._csv],{type:'text/csv'}));a.download='results.csv';a.click()}
 /* تشغيل الصفحة بعد تعريف كل المتغيرات */
 location.hash==='#admin'?admin():student();
 </script></body></html>
